@@ -7,6 +7,8 @@ from scrypyfall.foundation import ScrypyfallList
 
 
 SetsTcgplayerId = NewType('SetsTcgplayerId', list)
+SetsCode = NewType('SetsCode', ScrypyfallFoundation)
+SetsId = NewType('SetsId', ScrypyfallFoundation)
 
 
 class Sets(ScrypyfallIterableFoundation):
@@ -15,13 +17,17 @@ class Sets(ScrypyfallIterableFoundation):
         self.tcgplayer = SetsTcgplayer()
     
     def __call__(self, **kwargs) -> dict|ScrypyfallList:
+        if 'code' in kwargs:
+            return self.code(kwargs['code'])
+        if 'id' in kwargs:
+            return self.id(kwargs['id'])
         self.load(**kwargs)
         return self.data
     
-    def code(self, set_code):
+    def code(self, set_code) -> SetsCode:
         return SetsCode(set_code).data
     
-    def id(self, id):
+    def id(self, id) -> SetsId:
         return SetsId(id).data
 
 
@@ -34,7 +40,10 @@ class SetsCode(ScrypyfallFoundation):
 
 
 class SetsTcgplayer():
-    def id(self, id:int)-> SetsTcgplayerId:
+    def __call__(self, id:int) -> dict:
+        return self.id(id)
+
+    def id(self, id:int)-> dict:
         return SetsTcgplayerId(id).data
 
 
