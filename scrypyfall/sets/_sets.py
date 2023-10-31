@@ -16,7 +16,7 @@ class Sets(ScrypyfallIterableFoundation):
     
     def __call__(self, **kwargs) -> dict|ScrypyfallList:
         self.load(**kwargs)
-        return self.data
+        return self
     
     def code(self, set_code):
         return SetsCode(set_code).data

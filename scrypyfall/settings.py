@@ -5,6 +5,7 @@ class Settings():
         self.domain = 'api.scryfall.com'
         self.chunk_size = 8192
         self.headers = {}
+        self.lazy_loading = True
     
     def __getitem__(self, key):
         return getattr(self, key)

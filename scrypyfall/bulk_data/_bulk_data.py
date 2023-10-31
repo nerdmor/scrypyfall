@@ -28,7 +28,6 @@ class Bulk_data(ScrypyfallIterableFoundation):
             return self.id(id, **kwargs)
         if type_:
             return self.type(type_, **kwargs)
-
         return self.make_request(headers=kwargs.get('headers'))
     
     def id(self, id:str, format:str = 'json',  file_dir:str = None, **kwargs: Any) -> BulkDataItem:
