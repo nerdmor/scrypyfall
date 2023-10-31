@@ -6,6 +6,8 @@ from scrypyfall.foundation import ScrypyfallIterableFoundation
 from scrypyfall.foundation import ScrypyfallList
 from scrypyfall.foundation import IMAGE_VERSION_OPTIONS
 
+from ..settings import settings
+
 
 CardsSearch = NewType('CardsSearch', list)
 CardsNamed = NewType('CardsNamed', list)
@@ -17,7 +19,7 @@ CardsById = NewType('CardsMultiverse', dict)
 CardsOracle = NewType('CardsOracle', dict)
 CardsRulings = NewType('CardsRulings', list)
 
-class Cards:
+class Cards():
     def __init__(self) -> None:
         self.multiverse = CardsById('multiverse')
         self.mtgo = CardsById('mtgo')
@@ -27,6 +29,9 @@ class Cards:
         self._scryfall = CardsById('scryfall')
 
     def __call__(self, id:str, **kwargs: Any) -> CardsById:
+        return self.id(id, **kwargs)
+    
+    def id(self, id:str, **kwargs: Any) -> CardsById:
         return self._scryfall(id, **kwargs)
 
     def search(self, q:str, **kwargs: Any) -> CardsSearch:
@@ -71,7 +76,10 @@ class CardsSearch(ScrypyfallIterableFoundation):
         
         params = {k:v for k, v in kwargs.items() if self._validate_param(k, v)}
         params['q'] = q
-        self._get_data_page(validate_params=False, **params)
+        if settings.lazy_loading is False:
+            self.load(validate_params=False, **params)
+        else:
+            self._get_data_page(validate_params=False, **params)
 
 
 class CardsNamed(ScrypyfallIterableFoundation):
@@ -94,7 +102,10 @@ class CardsNamed(ScrypyfallIterableFoundation):
         if 'headers' in kwargs:
             self.headers.update(kwargs['headers'])
         params = {k:v for k, v in kwargs.items() if self._validate_param(k, v)}
-        self._get_data_page(validate_params=False, **params)
+        if settings.lazy_loading is False:
+            self.load(validate_params=False, **params)
+        else:
+            self._get_data_page(validate_params=False, **params)
         
 
 class CardsAutocomplete(ScrypyfallFoundation):
@@ -166,9 +177,12 @@ class CardsCollection(ScrypyfallIterableFoundation):
         self.has_more = False
         self.not_found = []
 
-        self._get_data_page(payload={'identifiers': identifiers}, **kwargs)
+        if settings.lazy_loading is False:
+            self.load(payload={'identifiers': identifiers}, **params)
+        else:
+            self._get_data_page(payload={'identifiers': identifiers}, **params)
     
-    def asdict(self):
+    def asdict(self) -> dict:
         return {
             'has_more': self.has_more,
             'data': self.data,
@@ -176,7 +190,7 @@ class CardsCollection(ScrypyfallIterableFoundation):
             'not_found': self.not_found
         }
         
-    def _get_data_page(self, **kwargs) -> None:
+    def _get_data_page(self, **kwargs:Any) -> None:
         if self.data or self.not_found:
             return
         if 'payload' not in kwargs:
@@ -286,7 +300,10 @@ class CardsRulings(ScrypyfallIterableFoundation):
             self.headers.update(kwargs['headers'])
 
         params = {k:v for k, v in kwargs.items() if self._validate_param(k, v)}
-        self._get_data_page(validate_params=False, **params)
+        if settings.lazy_loading is False:
+            self.load(validate_params=False, **params)
+        else:
+            self._get_data_page(validate_params=False, **params)
 
 
 class CardsOracle(ScrypyfallIterableFoundation):
@@ -302,16 +319,7 @@ class CardsOracle(ScrypyfallIterableFoundation):
             self.headers.update(kwargs['headers'])
         params = {k:v for k, v in kwargs.items() if self._validate_param(k, v)}
 
-        self._get_data_page(validate_params=False, **params)
-
-
-    
-
-
-
-
-
-
-            
-
-
+        if settings.lazy_loading is False:
+            self.load(validate_params=False, **params)
+        else:
+            self._get_data_page(validate_params=False, **params)

@@ -22,7 +22,7 @@ class Sets(ScrypyfallIterableFoundation):
         if 'id' in kwargs:
             return self.id(kwargs['id'])
         self.load(**kwargs)
-        return self.data
+        return self
     
     def code(self, set_code) -> SetsCode:
         return SetsCode(set_code).data

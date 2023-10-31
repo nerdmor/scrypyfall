@@ -11,7 +11,14 @@ import requests
 # custom libraries
 from .settings import settings
 
-IMAGE_VERSION_OPTIONS = ['small', 'normal', 'large', 'png', 'art_crop', 'border_crop']
+IMAGE_VERSION_OPTIONS = [
+    'small',
+    'normal',
+    'large',
+    'png',
+    'art_crop',
+    'border_crop'
+]
 
 
 ScrypyfallList = NewType('ScrypyfallList', list)
@@ -28,6 +35,14 @@ class ScrypyfallException(Exception):
 
 class ScrypyfallFoundation():
     def __init__(self, _url: str, override_url:bool = False) -> None:
+        """Foundation object for endpoints. Provides a few reusable methods and
+        allows for easier extension.
+
+        Args:
+            _url (str): the uri that defines this endpoint. e.g.: 'cards/named'
+            override_url (bool, optional): If set to True, _url will be treated 
+            as the whole url for the endopoint, and not just the URI. Defaults to False.
+        """
         if override_url:
             self.url = _url
         else:
@@ -40,7 +55,16 @@ class ScrypyfallFoundation():
             'pretty': {'type': bool}
         }
     
-    def __getitem__(self, key):
+    def __getitem__(self, key:str) -> Any:
+        """Allows this to be used as a dict. Will try to get information from
+        this.data before getting self attributes
+
+        Args:
+            key (str): name of the attribute to be returned
+
+        Returns:
+            Any: The value requested, either from self.data or self.
+        """
         if key in self.data:
             return self.data[key]
         return getattr(self, key)
@@ -175,9 +199,20 @@ class ScrypyfallIterableFoundation(ScrypyfallFoundation):
         
         raise StopIteration
 
-    def __getitem__(self, key):
+    def __getitem__(self, key:str) -> Any:
         if isinstance(key, int):
-            return self.data[key]
+            if (key >= len(self.data)
+                    and self.has_more is True
+                    and self.total is not None
+                    and key < self.total):
+                while key >= len(self.data):
+                    self._get_data_page()
+
+            try:
+                return self.data[key]
+            except IndexError:
+                raise IndexError('index out of range')
+
         return getattr(self, key)
         
     
@@ -199,11 +234,17 @@ class ScrypyfallIterableFoundation(ScrypyfallFoundation):
         elif isinstance(new_data, ScrypyfallCollection):
             self.data += new_data.data
             self.total = new_data.total_values
+        elif isinstance(new_data, ScrypyfallCatalog):
+            self.data = new_data.data
+            self.total = new_data.total_values
         else:
             self.data = [new_data]
             self.has_more = False
+        
+        if self.total is None and self.has_more is False:
+            self.total = len(self.data)
     
-    def load(self, **kwargs) -> None:
+    def load(self, **kwargs: Any) -> None:
         if self._next_page_url is None and len(self.data) == 0:
             self.has_more = True
         
@@ -215,21 +256,21 @@ class IterableResponse():
     def __init__(self, data:list) -> None:
         self.data = data
     
-    def __iter__(self):
+    def __iter__(self) -> Any:
         yield from self.data
     
-    def __getitem__(self, key):
+    def __getitem__(self, key:str) -> Any:
         if isinstance(key, int):
             return self.data[key]
         return getattr(self, key)
     
-    def __str__(self):
+    def __str__(self) -> str:
         return json.dumps(self.asdict())
 
-    def asdict(self):
+    def asdict(self) -> dict:
         return {}
 
-    def items(self):
+    def items(self) -> (Any, Any):
         for k, v in self.asdict().items():
             yield k, v
 
@@ -241,8 +282,13 @@ class ScrypyfallList(IterableResponse):
         super().__init__(obj.get('data', []))
 
         self.not_found = obj.get('not_found', [])
-        self.total = obj.get('total_cards')
         self.has_more = obj.get('has_more', False)
+
+        self.total = None
+        for k in ['total_cards', 'total']:
+            if k in obj:
+                self.total = obj[k]
+                break
         self.next_page = None
         self.next_page_url = None
         if self.has_more and obj.get('next_page'):

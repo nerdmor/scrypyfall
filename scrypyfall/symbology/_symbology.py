@@ -3,6 +3,7 @@ from typing import NewType
 
 from scrypyfall.foundation import ScrypyfallFoundation
 from scrypyfall.foundation import ScrypyfallIterableFoundation
+from ..settings import settings
 
 Symbology = NewType('Symbology', ScrypyfallIterableFoundation)
 
@@ -11,7 +12,10 @@ class Symbology(ScrypyfallIterableFoundation):
         super().__init__('symbology')
     
     def __call__(self) -> Symbology:
-        self._get_data_page()
+        if settings.lazy_loading is False:
+            self.load()
+        else:
+            self._get_data_page()
         return self
     
     def parse_mana(self, cost:str) -> dict:
