@@ -32,6 +32,15 @@ ScrypyfallCollection = NewType('ScrypyfallCollection', list)
 ScrypyfallCatalog = NewType('ScrypyfallCatalog', list)
 
 
+class ScrypyfallJsonEncoder(json.JSONEncoder):
+    """JSON encoder that handles small needs from the library
+    """
+    def default(self, o):
+        if isinstance(o, type):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
+
 class ScrypyfallException(Exception):
     """Base exception class for the module
 
@@ -59,7 +68,7 @@ class ScrypyfallFoundation():
             call. This makes it easier to make optional parameters for endpoints
             without accepting ANYTHING.
     """
-    def __init__(self, _url:str, override_url:bool = False) -> None:
+    def __init__(self, _url:str, override_url:bool =False) -> None:
         """Foundation object for endpoints.
         
         Provides a few reusable methods and allows for easier extension.
@@ -97,7 +106,52 @@ class ScrypyfallFoundation():
         if key in self.data:
             return self.data[key]
         return getattr(self, key)
+    
+    def __str__(self) -> str:
+        """Returns a string representing the object.
+        
+        This is a JSON dump of self.asdict()
 
+        Returns:
+            str: A string representing the object.
+        """
+        return json.dumps(self.asdict(), cls=ScrypyfallJsonEncoder)
+    
+    def keys(self) -> list:
+        """Lists keys in the object.
+        
+        Allows for better compatibility with dicts.
+
+        Returns:
+            list: a list of keys this object can handle.
+        """
+        keys = [e for e in self.__dict__.keys() if e != 'data'] + self.data_keys()
+        return keys
+    
+    def data_keys(self) -> list:
+        """Lists keys in self.data
+
+        Returns:
+            list: keys from self.data
+        """
+        if self.data:
+            return self.data.keys()
+        return []
+    
+    def asdict(self) -> dict:
+        """Creates a dict representation of self.
+        
+        This is equivalent to creating a dict from self.keys()
+
+        Returns:
+            dict: a dict representation of self.
+        """
+        keys = [e for e in self.__dict__.keys() if e != 'data']
+        dic = {k:getattr(self, k) for k in keys}
+        if self.data:
+            dic.update(self.data)
+        return dic
+    
     def _build_base_url(self, _url:str) -> str:
         """Internal method. Builds a URL with protocol and domain defined in
         settings.
