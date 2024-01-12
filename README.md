@@ -1,5 +1,5 @@
 # scrypyfall
-A Python Scryfall API wrapper. Inspired by XXX's Scrython library.
+A Python Scryfall API wrapper. Inspired by [NandaScott](https://github.com/NandaScott)'s [Scrython](https://github.com/NandaScott/Scrython) library.
 
 This library tries to emulate as closely as possible [Scryfall's API](https://scryfall.com/docs/api) syntax, allowing for easy integration.
 
