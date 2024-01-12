@@ -13,6 +13,9 @@ from scrypyfall.foundation import ScrypyfallFoundation
 from scrypyfall.foundation import ScrypyfallIterableFoundation
 from scrypyfall.foundation import ScrypyfallList
 from scrypyfall.foundation import IMAGE_VERSION_OPTIONS
+from scrypyfall.exceptions import ScrypyFallTooFewIdentifiersException
+from scrypyfall.exceptions import ScrypyFallTooManyIdentifiersException
+from scrypyfall.exceptions import ScrypyFallInvalidIdentifiersException
 
 # settings
 from ..settings import settings
@@ -357,19 +360,19 @@ class CardsCollection(ScrypyfallIterableFoundation):
             
 
         Raises:
-            ScrypyFallTooFewIdentifiers: When not enough identifiers are
+            ScrypyFallTooFewIdentifiersException: When not enough identifiers are
                 provided.
-            ScrypyFallTooManyIdentifiers: When more than 75 identifiers are
+            ScrypyFallTooManyIdentifiersException: When more than 75 identifiers are
                 provided.
-            ScrypyFallInvalidIdentifiers: When the given identifiers are invalid
+            ScrypyFallInvalidIdentifiersException: When the given identifiers are invalid
         """
         super().__init__('cards/collection')
 
         if not identifiers:
-            raise ValueError("A non-empty list of identifiers is needed")
+            raise ScrypyFallTooFewIdentifiersException("A non-empty list of identifiers is needed")
 
         if len(identifiers) > 75:
-            raise ValueError(f"A maximum of 75 identifiers are allowed. {len(identifiers)} provided.")
+            raise ScrypyFallTooManyIdentifiersException(f"A maximum of 75 identifiers are allowed. {len(identifiers)} provided.")
 
         allowed_keys = {
             'id': str,
@@ -384,16 +387,16 @@ class CardsCollection(ScrypyfallIterableFoundation):
 
         for ide in identifiers:
             if not isinstance(ide, dict):
-                raise ValueError('All elements in an identifier array must be dicts')
+                raise ScrypyFallInvalidIdentifiersException('All elements in an identifier array must be dicts')
             for k, v in ide.items():
                 if v is None:
-                    raise ValueError(f"Null identifiers are not allowed")
+                    raise ScrypyFallInvalidIdentifiersException(f"Null identifiers are not allowed")
                 if k not in allowed_keys:
-                    raise ValueError(f"Invalid identifier '{k}' in list")
+                    raise ScrypyFallInvalidIdentifiersException(f"Invalid identifier '{k}' in list")
                 if not isinstance(v, allowed_keys[k]):
-                    raise ValueError(f"Values of identifiers '{k}' must be {allowed_keys[k]}, {type(v)} provided")
+                    raise ScrypyFallInvalidIdentifiersException(f"Values of identifiers '{k}' must be {allowed_keys[k]}, {type(v)} provided")
                 if k == 'set' and 'name' not in ide and 'collector_number' not in ide:
-                    raise ValueError("'set' identifiers must always have a collector number or name in the same request")
+                    raise ScrypyFallInvalidIdentifiersException("'set' identifiers must always have a collector number or name in the same request")
         
         if 'headers' in kwargs:
             self.headers.update(kwargs['headers'])
