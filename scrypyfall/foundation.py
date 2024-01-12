@@ -586,7 +586,7 @@ class ScrypyfallCollection(IterableResponse):
         self.total_values = obj.get('total_values', 0)
         self.object = 'collection'
 
-    def asdict(self):
+    def asdict(self) -> dict:
         """Creates a dict representation of this object.
 
         Returns:
@@ -628,7 +628,7 @@ class ScrypyfallCatalog(IterableResponse):
         self.uri = obj.get('uri')
         self.object = 'catalog'
 
-    def asdict(self):
+    def asdict(self) -> dict:
         """Creates a dict representation of this object.
 
         Returns:
